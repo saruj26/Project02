@@ -16,14 +16,8 @@ interface AddAccessoriesFormProps {
     category: string;
     price: number;
     stock: number;
-    frameType: string;
-    frameMaterial: string;
-    color: string;
     size: string;
     weight: string;
-    features: string[];
-    recommendedFaceShapes: string[];
-    recommendedVisionProblems: string[];
   }) => void;
   onCancel: () => void;
 }
@@ -35,14 +29,8 @@ const AddAccessoriesForm: React.FC<AddAccessoriesFormProps> = ({ onAddProduct, o
     category: "",
     price: "",
     stock: "",
-    frameType: "",
-    frameMaterial: "",
-    color: "",
     size: "",
     weight: "",
-    features: [] as string[],
-    recommendedFaceShapes: [] as string[],
-    recommendedVisionProblems: [] as string[],
   });
   
   const { toast } = useToast();
@@ -119,14 +107,9 @@ const AddAccessoriesForm: React.FC<AddAccessoriesFormProps> = ({ onAddProduct, o
       category: formData.category,
       price: numericPrice,
       stock: numericStock,
-      frameType: formData.frameType || "rectangular",
-      frameMaterial: formData.frameMaterial || "plastic",
-      color: formData.color || "black",
       size: formData.size || "Standard",
       weight: formData.weight || "20g",
-      features: formData.features,
-      recommendedFaceShapes: formData.recommendedFaceShapes,
-      recommendedVisionProblems: formData.recommendedVisionProblems,
+      
     });
 
     // Reset form
@@ -136,14 +119,8 @@ const AddAccessoriesForm: React.FC<AddAccessoriesFormProps> = ({ onAddProduct, o
       category: "",
       price: "",
       stock: "",
-      frameType: "",
-      frameMaterial: "",
-      color: "",
       size: "",
       weight: "",
-      features: [],
-      recommendedFaceShapes: [],
-      recommendedVisionProblems: [],
     });
   };
 
@@ -225,48 +202,7 @@ const AddAccessoriesForm: React.FC<AddAccessoriesFormProps> = ({ onAddProduct, o
 
           {/* Physical Properties */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="frameType">Frame Type</Label>
-              <Select value={formData.frameType} onValueChange={(value) => handleInputChange("frameType", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {frameTypes.map(type => (
-                    <SelectItem key={type} value={type}>
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="frameMaterial">Material</Label>
-              <Select value={formData.frameMaterial} onValueChange={(value) => handleInputChange("frameMaterial", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select material" />
-                </SelectTrigger>
-                <SelectContent>
-                  {frameMaterials.map(material => (
-                    <SelectItem key={material} value={material}>
-                      {material.charAt(0).toUpperCase() + material.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="color">Color</Label>
-              <Input 
-                id="color" 
-                placeholder="e.g., Black, Gold"
-                value={formData.color}
-                onChange={(e) => handleInputChange("color", e.target.value)}
-              />
-            </div>
-
+            
             <div className="space-y-2">
               <Label htmlFor="size">Size</Label>
               <Input 
@@ -276,7 +212,7 @@ const AddAccessoriesForm: React.FC<AddAccessoriesFormProps> = ({ onAddProduct, o
                 onChange={(e) => handleInputChange("size", e.target.value)}
               />
             </div>
-          </div>
+       
 
           <div className="space-y-2">
             <Label htmlFor="weight">Weight</Label>
@@ -287,64 +223,11 @@ const AddAccessoriesForm: React.FC<AddAccessoriesFormProps> = ({ onAddProduct, o
               onChange={(e) => handleInputChange("weight", e.target.value)}
             />
           </div>
-
-          {/* Features */}
-          <div className="space-y-2">
-            <Label>Features</Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {commonFeatures.map(feature => (
-                <div key={feature} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`feature-${feature}`}
-                    checked={formData.features.includes(feature)}
-                    onCheckedChange={() => handleArrayToggle("features", feature)}
-                  />
-                  <Label htmlFor={`feature-${feature}`} className="text-sm">
-                    {feature}
-                  </Label>
-                </div>
-              ))}
-            </div>
           </div>
 
-          {/* Recommendations */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label>Recommended Face Shapes</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {faceShapes.map(shape => (
-                  <div key={shape} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`face-${shape}`}
-                      checked={formData.recommendedFaceShapes.includes(shape)}
-                      onCheckedChange={() => handleArrayToggle("recommendedFaceShapes", shape)}
-                    />
-                    <Label htmlFor={`face-${shape}`} className="text-sm capitalize">
-                      {shape}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
+          
 
-            <div className="space-y-2">
-              <Label>Recommended for Vision Problems</Label>
-              <div className="grid grid-cols-1 gap-2">
-                {visionProblems.map(problem => (
-                  <div key={problem} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`vision-${problem}`}
-                      checked={formData.recommendedVisionProblems.includes(problem)}
-                      onCheckedChange={() => handleArrayToggle("recommendedVisionProblems", problem)}
-                    />
-                    <Label htmlFor={`vision-${problem}`} className="text-sm capitalize">
-                      {problem}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+         
         </CardContent>
         
         <CardFooter className="flex justify-between">
