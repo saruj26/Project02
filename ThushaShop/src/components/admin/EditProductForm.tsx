@@ -26,7 +26,7 @@ interface EditProductFormProps {
     features?: string[];
     face_shapes?: string[];
     vision_problems?: string[];
-    images: File[];
+    
   };
   onCancel: () => void;
   onSuccess: () => void;

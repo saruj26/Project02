@@ -1,3 +1,9 @@
+export interface ProductImage {
+  id: number;
+  image: string;
+  is_primary: boolean;
+}
+
 export interface ApiProduct {
   id: number;
   name: string;
@@ -8,7 +14,6 @@ export interface ApiProduct {
   size: string;
   weight: number;
   stock: number;
-  images: File[];
   manufacturer: number;
   created_at: string;
   colors:string;
@@ -16,6 +21,7 @@ export interface ApiProduct {
   face_shapes: string[];
   vision_problems: string[];
   sold:number;
+  images: ProductImage[];
 }
 
 export interface Category {
@@ -34,7 +40,6 @@ export interface Product {
   description: string;
   price: number;
   stock: number;
-  images: File[];
   size: string;
   weight: number;
   sold:number;
@@ -42,6 +47,7 @@ export interface Product {
   // Standardized as object
   category: Category;
   frame_type: FrameType;
+  images: ProductImage[];
 
   // Optional fields
   frameMaterial?: string;

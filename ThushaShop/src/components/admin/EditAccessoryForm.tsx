@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardHeader,
@@ -18,12 +18,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminDashboard } from "@/context/AdminDashboardContext";
+import { Accessory } from "@/types/accessory";
 
-interface AddAccessoriesFormProps {
+interface EditAccessoryFormProps {
+  accessory: Accessory;
   onCancel: () => void;
+  onSuccess: () => void;
 }
 
 interface AccessoryFormData {
@@ -33,33 +35,37 @@ interface AccessoryFormData {
   price: string;
   stock: string;
   weight: string;
-  image: string;
 }
-const AddAccessoriesForm: React.FC<AddAccessoriesFormProps> = ({
-  onCancel,
-}) => {
-  const { addAccessory, categories, refreshAccessories } = useAdminDashboard();
 
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    category: "",
-    price: "",
-    stock: "",
-    weight: "",
+const EditAccessoryForm: React.FC<EditAccessoryFormProps> = ({
+  accessory,
+  onCancel,
+  onSuccess,
+}) => {
+  const { updateAccessory, categories, refreshProducts } = useAdminDashboard();
+  const { toast } = useToast();
+
+  const [formData, setFormData] = useState<AccessoryFormData>({
+    name: accessory.name,
+    description: accessory.description,
+    category: accessory.category.id.toString(),
+    price: accessory.price.toString(),
+    stock: accessory.stock.toString(),
+    weight: accessory.weight.toString(),
   });
 
-  const { toast } = useToast();
   const [image, setImage] = useState<File | null>(null);
+  const [currentImageUrl, setCurrentImageUrl] = useState(accessory.image);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof AccessoryFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       setImage(e.target.files[0]);
+      setCurrentImageUrl(URL.createObjectURL(e.target.files[0]));
     }
   };
 
@@ -102,15 +108,6 @@ const AddAccessoriesForm: React.FC<AddAccessoriesFormProps> = ({
       return false;
     }
 
-    if (!image) {
-      toast({
-        title: "Validation Error",
-        description: "Accessory image is required",
-        variant: "destructive",
-      });
-      return false;
-    }
-
     return true;
   };
 
@@ -139,45 +136,46 @@ const AddAccessoriesForm: React.FC<AddAccessoriesFormProps> = ({
         formDataToSend.append("image", image);
       }
 
-      await addAccessory(formDataToSend);
-      await refreshAccessories();
+      await updateAccessory(accessory.id, formDataToSend);
+      await refreshProducts();
 
       toast({
         title: "Success",
-        description: "Accessory added successfully",
+        description: "Accessory updated successfully",
       });
 
-      onCancel();
+      onSuccess();
     } catch (error) {
-      console.error("Error adding Accessory:", error);
+      console.error("Error updating accessory:", error);
       toast({
         title: "Error",
-        description: "Failed to add Accessory",
+        description:
+          error instanceof Error ? error.message : "Failed to update accessory",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+
   return (
     <Card className="max-w-4xl mx-auto">
       <CardHeader>
-        <CardTitle>Add New onAddAccessory</CardTitle>
-        <CardDescription>
-          Enter the details for the new onAddAccessory
-        </CardDescription>
+        <CardTitle>Edit Accessory</CardTitle>
+        <CardDescription>Update the details for this accessory</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">onAddAccessory Name *</Label>
+              <Label htmlFor="name">Accessory Name *</Label>
               <Input
                 id="name"
-                placeholder="Enter onAddAccessory name"
+                placeholder="Enter accessory name"
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
+                required
               />
             </div>
 
@@ -209,7 +207,7 @@ const AddAccessoriesForm: React.FC<AddAccessoriesFormProps> = ({
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              placeholder="Enter onAddAccessory description"
+              placeholder="Enter accessory description"
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
               rows={3}
@@ -218,14 +216,22 @@ const AddAccessoriesForm: React.FC<AddAccessoriesFormProps> = ({
 
           {/* Image Upload */}
           <div className="space-y-2">
-            <Label htmlFor="image">Accessory Image *</Label>
-            <Input
-              id="image"
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              required
-            />
+            <Label htmlFor="image">Accessory Image</Label>
+            <div className="flex items-center gap-4">
+              {currentImageUrl && (
+                <img
+                  src={currentImageUrl}
+                  alt="Current accessory"
+                  className="w-16 h-16 object-cover rounded"
+                />
+              )}
+              <Input
+                id="image"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+            </div>
           </div>
 
           {/* Pricing and Stock */}
@@ -236,15 +242,16 @@ const AddAccessoriesForm: React.FC<AddAccessoriesFormProps> = ({
                 id="price"
                 type="number"
                 step="0.01"
-                min="0"
+                min="0.01"
                 placeholder="0.00"
                 value={formData.price}
                 onChange={(e) => handleInputChange("price", e.target.value)}
+                required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="stock">Initial Stock *</Label>
+              <Label htmlFor="stock">Stock *</Label>
               <Input
                 id="stock"
                 type="number"
@@ -252,19 +259,22 @@ const AddAccessoriesForm: React.FC<AddAccessoriesFormProps> = ({
                 placeholder="0"
                 value={formData.stock}
                 onChange={(e) => handleInputChange("stock", e.target.value)}
+                required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="weight">Weight</Label>
+              <Label htmlFor="weight">Weight (grams)</Label>
               <Input
                 id="weight"
-                placeholder="e.g., 18g"
+                placeholder="e.g., 18"
                 value={formData.weight}
                 onChange={(e) => handleInputChange("weight", e.target.value)}
               />
             </div>
           </div>
+
+          {/* Physical Properties */}
         </CardContent>
 
         <CardFooter className="flex justify-between">
@@ -277,7 +287,7 @@ const AddAccessoriesForm: React.FC<AddAccessoriesFormProps> = ({
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Adding..." : "Add Accessory"}
+            {isSubmitting ? "Saving..." : "Save Changes"}
           </Button>
         </CardFooter>
       </form>
@@ -285,4 +295,4 @@ const AddAccessoriesForm: React.FC<AddAccessoriesFormProps> = ({
   );
 };
 
-export default AddAccessoriesForm;
+export default EditAccessoryForm;

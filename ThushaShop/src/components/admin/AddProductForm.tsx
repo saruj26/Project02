@@ -41,8 +41,7 @@ interface ProductFormData {
   features: string[];
   recommendedFaceShapes: string[];
   recommendedVisionProblems: string[];
-  // image: string;
-  images: File[];
+
 }
 
 const frameMaterials = [
@@ -104,14 +103,13 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onCancel }) => {
     colors: "",
     size: "",
     weight: "",
-    images: [],
     features: [],
     recommendedFaceShapes: [],
     recommendedVisionProblems: [],
   });
 
-  const [images, setImages] = useState<File[]>([]);
-
+  const [files, setFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -119,24 +117,32 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onCancel }) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newImages = Array.from(e.target.files);
-      if (images.length + newImages.length > 5) {
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      
+      // Validate number of images
+      if (files.length + newFiles.length > 5) {
         toast({
-          title: "Too many images",
-          description: "You can upload a maximum of 5 images",
-          variant: "destructive",
+          title: "Maximum images exceeded",
+          description: "You can upload up to 5 images",
+          variant: "destructive"
         });
         return;
       }
-      setImages((prev) => [...prev, ...newImages]);
+
+      // Create preview URLs
+      const newPreviewUrls = newFiles.map(file => URL.createObjectURL(file));
+      
+      setFiles(prev => [...prev, ...newFiles]);
+      setPreviewUrls(prev => [...prev, ...newPreviewUrls]);
     }
   };
 
-  const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  };
+
+  // const removeImage = (index: number) => {
+  //   setImages((prev) => prev.filter((_, i) => i !== index));
+  // };
 
   const handleArrayToggle = (field: keyof ProductFormData, value: string) => {
     setFormData((prev) => {
@@ -150,11 +156,20 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onCancel }) => {
     });
   };
 
+  const removeImage = (index: number) => {
+    // Clean up the object URL
+    URL.revokeObjectURL(previewUrls[index]);
+    
+    setFiles(prev => prev.filter((_, i) => i !== index));
+    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
   // const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   //   if (e.target.files?.[0]) {
   //     setImage(e.target.files[0]);
   //   }
   // };
+
 
   const validateForm = (): boolean => {
     if (!formData.name.trim()) {
@@ -166,19 +181,19 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onCancel }) => {
       return false;
     }
 
-    if (images.length === 0) {
+    // if (images.length === 0) {
+    //   toast({
+    //     title: "Validation Error",
+    //     description: "At least one product image is required",
+    //     variant: "destructive",
+    //   });
+    //   return false;
+    // }
+
+    if (files.length === 0) {
       toast({
         title: "Validation Error",
         description: "At least one product image is required",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    if (!formData.category) {
-      toast({
-        title: "Validation Error",
-        description: "Category is required",
         variant: "destructive",
       });
       return false;
@@ -234,8 +249,8 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onCancel }) => {
       formDataToSend.append("price", formData.price);
       formDataToSend.append("stock", formData.stock);
 
-      images.forEach((image) => {
-      formDataToSend.append('images', image);  // Note: same field name for all images
+      files.forEach(file => {
+        formDataToSend.append("uploaded_images", file);
       });
 
       if (formData.frameType) {
@@ -284,6 +299,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onCancel }) => {
       }
 
       const newProduct = await addProduct(formDataToSend);
+      console.log(newProduct.images); 
       await refreshProducts();
 
       toast({
@@ -540,6 +556,7 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onCancel }) => {
             </div>
           </div>
 
+          
           {/* Image Upload */}
           <div className="space-y-4">
             <div className="space-y-2">
@@ -557,25 +574,24 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onCancel }) => {
               </p>
             </div>
 
-            {images.length > 0 && (
-              <div className="grid grid-cols-3 gap-2">
-                {images.map((image, index) => (
+            {previewUrls.length > 0 && (
+              <div className="grid grid-cols-3 gap-4">
+                {previewUrls.map((url, index) => (
                   <div key={index} className="relative group">
                     <img
-                      src={URL.createObjectURL(image)}
+                      src={url}
                       alt={`Preview ${index + 1}`}
-                      className="h-24 w-full object-cover rounded-md"
+                      className="w-full h-32 object-cover rounded-md"
                     />
                     <Button
                       type="button"
                       variant="destructive"
                       size="sm"
-                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => removeImage(index)}
                     >
                       Remove
                     </Button>
-                    <p className="text-xs truncate">{image.name}</p>
                   </div>
                 ))}
               </div>

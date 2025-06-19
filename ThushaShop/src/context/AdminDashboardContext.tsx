@@ -96,14 +96,18 @@ export const AdminDashboardProvider: React.FC<AdminDashboardProviderProps> = ({ 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [frameTypesData, categoriesData, productsData] = await Promise.all([
+        const [frameTypesData, categoriesData, productsData ,accessoriesData] = await Promise.all([
           getFrameTypes(),
           getCategories(),
-          fetchProducts()
+          fetchProducts(),
+          fetchAccessories()
+          
         ]);
         setFrameTypes(frameTypesData);
         setCategories(categoriesData);
         setProducts(productsData);
+        setAccessories(accessoriesData);
+        console.log("✅ Accessory fetch response va:", accessoriesData); // ✅ step 2
       } catch (error) {
         console.error("Failed to load initial data:", error);
         toast({

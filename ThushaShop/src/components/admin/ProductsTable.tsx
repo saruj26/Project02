@@ -18,7 +18,10 @@ import ProductTableHeader from "./ProductTableHeader";
 import ProductTableRow from "./ProductTableRow";
 import CategoryTable from "./CategoryTable";
 import FrameTypesTable from "./FrameTypeTable";
+import AccessoryTable from "./AccessoryTable";
 import { Product } from "@/types/product";
+import { Accessory } from "@/types/accessory";
+
 
 
 interface ProductsTableProps {
@@ -28,6 +31,12 @@ interface ProductsTableProps {
   onAddProduct: (productData: FormData) => Promise<Product>;
   onUpdateProduct: (id: number, productData: FormData) => Promise<Product>;
 
+  accessories: Accessory[];
+  onUpdateAccessoryStock: (accessoryId: number, newStock: number) => void;
+  onDeleteAccessory: (accessoryId: number) => void;
+  onAddAccessory: (accessoryData: FormData) => Promise<Accessory>;
+  onUpdateAccessory: (id: number, accessoryData: FormData) => Promise<Accessory>;
+
 }
 
 const ProductsTable: React.FC<ProductsTableProps> = ({
@@ -35,7 +44,13 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
   onUpdateStock,
   onDeleteProduct,
   onAddProduct,
-  onUpdateProduct
+  onUpdateProduct,
+
+  accessories,
+  onUpdateAccessoryStock,
+  onDeleteAccessory,
+  onAddAccessory,
+  onUpdateAccessory
 }) => {
   const { toast } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -55,6 +70,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="frames">Frames</TabsTrigger>
+           <TabsTrigger value="accessories">Accessories</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products">
@@ -107,6 +123,16 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
 
         <TabsContent value="frames">
           <FrameTypesTable />
+        </TabsContent>
+
+        <TabsContent value="accessories">
+          <AccessoryTable 
+            accessories={accessories}
+            onUpdateStock={onUpdateAccessoryStock}
+            onDeleteAccessory={onDeleteAccessory}
+            onAddAccessory={onAddAccessory}
+            onUpdateAccessory={onUpdateAccessory}
+          />
         </TabsContent>
       </Tabs>
     </Card>

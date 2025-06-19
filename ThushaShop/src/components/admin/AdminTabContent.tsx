@@ -44,6 +44,13 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
     deleteProduct,
     addProduct,
     updateProduct,
+
+    accessories,
+    updateAccessory,
+    addAccessory,
+    deleteAccessory,
+    updateAccessoryStock,
+
   } = useAdminDashboard();
 
   const handleUpdateAppointmentStatus = (
@@ -103,6 +110,12 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
           onDeleteProduct={deleteProduct}
           onAddProduct={addProduct}
           onUpdateProduct={updateProduct}
+
+          accessories={accessories}
+          onUpdateAccessoryStock={updateAccessoryStock}
+          onDeleteAccessory={deleteAccessory}
+          onAddAccessory={addAccessory}
+          onUpdateAccessory={updateAccessory}
         />
       </TabsContent>
 
