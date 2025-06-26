@@ -33,3 +33,12 @@ export interface ApiAccessory {
   created_at: string;
   sold:number;
 }
+
+export function normalizeAccessory(apiAccessory: ApiAccessory): Accessory {
+  return {
+    ...apiAccessory,
+    category: typeof apiAccessory.category === 'string'
+      ? { id: 0, name: apiAccessory.category } // Create category object from string
+      : apiAccessory.category
+  };
+}

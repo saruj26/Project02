@@ -1,8 +1,8 @@
-export interface ProductImage {
-  id: number;
-  image: string;
-  is_primary: boolean;
-}
+// export interface ProductImage {
+//   id: number;
+//   image: string;
+//   is_primary: boolean;
+// }
 
 export interface ApiProduct {
   id: number;
@@ -21,7 +21,8 @@ export interface ApiProduct {
   face_shapes: string[];
   vision_problems: string[];
   sold:number;
-  images: ProductImage[];
+  images: string[];
+
 }
 
 export interface Category {
@@ -44,21 +45,16 @@ export interface Product {
   weight: number;
   sold:number;
 
-  // Standardized as object
   category: Category;
   frame_type: FrameType;
-  images: ProductImage[];
+  images: string[];
 
-  // Optional fields
   frameMaterial?: string;
   colors?: string;
-  
-  // Arrays
   features?: string[];
   face_shapes?: string[];
   vision_problems?: string[];
   
-  // Metadata
   created_at?: string;
   manufacturer_id?: number;
 }
@@ -77,4 +73,25 @@ export interface ProductFormData {
   features: string[];
   face_shapes: string[];
   vision_problems: string[];
+}
+
+
+
+
+export function normalizeProduct(apiProduct: ApiProduct): Product {
+  
+  return {
+    ...apiProduct,
+    images: apiProduct.images || [],
+    category: apiProduct.category 
+      ? (typeof apiProduct.category === 'string'
+        ? { id: 0, name: apiProduct.category }
+        : apiProduct.category)
+      : null,
+    frame_type: apiProduct.frame_type
+      ? (typeof apiProduct.frame_type === 'string'
+        ? { id: 0, name: apiProduct.frame_type }
+        : apiProduct.frame_type)
+      : null
+  };
 }

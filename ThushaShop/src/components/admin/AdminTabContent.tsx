@@ -10,14 +10,14 @@ import OrdersTable from "@/components/admin/OrdersTable";
 import ProductsTable from "@/components/admin/ProductsTable";
 import AppointmentsTable from "@/components/admin/AppointmentsTable";
 import CustomersTable from "@/components/admin/CustomersTable";
-import ProfileSettings from "@/components/admin/ProfileSettings";
 
 // Import mock data
 import {
-  mockCustomers,
+  // mockCustomers,
   salesData,
   categoryData,
 } from "@/components/admin/mockData";
+import AccountSettings from "@/components/admin/AccountSettings";
 
 interface AdminTabContentProps extends StaffAccountReceiverProps {
   viewMode: "list" | "grid";
@@ -32,14 +32,15 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
   const { user } = useUser();
   const {
     orders,
-    products,
-    appointments,
+
     stats,
     updateOrderStatus,
     deleteOrder,
-    updateAppointmentStatus,
+
+    appointments,
     deleteAppointment,
 
+    products,
     updateStock,
     deleteProduct,
     addProduct,
@@ -51,28 +52,10 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
     deleteAccessory,
     updateAccessoryStock,
 
+    customers,
+    deactivateCustomer,
+    activateCustomer,
   } = useAdminDashboard();
-
-  const handleUpdateAppointmentStatus = (
-    appointmentId: string,
-    newStatus: string
-  ) => {
-    // Only doctors can update appointment status
-    if (user?.role === "admin") {
-      return;
-    }
-
-    updateAppointmentStatus(appointmentId, newStatus);
-  };
-
-  const handleDeleteAppointment = (appointmentId: string) => {
-    // Only doctors can delete appointments
-    if (user?.role === "admin") {
-      return;
-    }
-
-    deleteAppointment(appointmentId);
-  };
 
   const handleAssignDelivery = (orderId: string, deliveryPerson: string) => {
     // Handle delivery assignment logic here
@@ -110,7 +93,6 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
           onDeleteProduct={deleteProduct}
           onAddProduct={addProduct}
           onUpdateProduct={updateProduct}
-
           accessories={accessories}
           onUpdateAccessoryStock={updateAccessoryStock}
           onDeleteAccessory={deleteAccessory}
@@ -122,21 +104,21 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
       <TabsContent value="appointments">
         <AppointmentsTable
           appointments={appointments}
-          onUpdateAppointmentStatus={handleUpdateAppointmentStatus}
-          onDeleteAppointment={handleDeleteAppointment}
-          onCreateStaffAccount={onCreateStaffAccount}
+          onDeleteAppointment={deleteAppointment}
         />
       </TabsContent>
 
       <TabsContent value="customers">
         <CustomersTable
-          customers={mockCustomers}
+          customers={customers}
+          onDeactivateCustomer={deactivateCustomer}
+          onActivateCustomer={activateCustomer}
           onCreateStaffAccount={onCreateStaffAccount}
         />
       </TabsContent>
 
       <TabsContent value="settings">
-        <ProfileSettings />
+        <AccountSettings />
       </TabsContent>
     </>
   );

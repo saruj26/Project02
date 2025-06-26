@@ -32,7 +32,7 @@ const ProductTableRow: React.FC<ProductTableRowProps> = ({
 }) => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
-
+  const MEDIA_URL = "http://localhost:8000/media/";
   const handleDelete = () => {
     toast({
       title: "Confirm Deletion",
@@ -87,20 +87,26 @@ const ProductTableRow: React.FC<ProductTableRowProps> = ({
     }).format(price);
   };
 
+  console.log("Full product data:", product);
+  console.log("Images array:", product.images);
   return (
     <TableRow key={product.id}>
       <TableCell className="font-medium">{index + 1}</TableCell>
       <TableCell className="whitespace-nowrap">{product.name}</TableCell>
+
       <TableCell className="whitespace-nowrap">
-        {" "}
         <div className="flex items-center space-x-3">
           {product.images?.length > 0 && (
             <img
-              src={`${product.images[0]}`}
+              src={
+                product.images[0].startsWith("http")
+                  ? product.images[0]
+                  : `${MEDIA_URL}${product.images[0]}`
+              }
               alt={product.name}
               className="w-10 h-10 object-cover rounded"
             />
-          )}{" "}
+          )}
         </div>
       </TableCell>
       <TableCell>{product.category?.name}</TableCell>

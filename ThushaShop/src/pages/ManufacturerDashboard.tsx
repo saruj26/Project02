@@ -9,6 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Package, Eye, Clock, CheckCircle, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { OrderStatus } from '@/types';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { User, ArrowLeft } from "lucide-react";
+import ManufacturerAccountSettings from "@/components/manufacturer/ManufacturerAccountSettings";
+
 
 interface ManufacturerOrder {
   id: string;
@@ -37,6 +41,7 @@ interface ManufacturerOrder {
 const ManufacturerDashboard = () => {
   const { toast } = useToast();
   const [orders, setOrders] = useState<ManufacturerOrder[]>([
+
     {
       id: 'ORD-001',
       customerName: 'John Doe',
@@ -82,7 +87,11 @@ const ManufacturerDashboard = () => {
 
   const [selectedOrder, setSelectedOrder] = useState<ManufacturerOrder | null>(null);
   const [manufacturerNotes, setManufacturerNotes] = useState('');
-
+  const [view, setView] = useState("dashboard");
+  const handleLogout = () => {
+    
+    document.location.href = '/logout'; 
+  };
   const updateOrderStatus = (orderId: string, newStatus: OrderStatus, notes?: string) => {
     // Manufacturers can only update to "ready_to_deliver"
     if (newStatus !== 'ready_to_deliver' && newStatus !== 'processing') {
@@ -129,223 +138,262 @@ const ManufacturerDashboard = () => {
     ['processing', 'ready_to_deliver', 'shipped'].includes(order.status)
   );
 
-  return (
+  
+    return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Manufacturer Dashboard</h1>
-        <p className="text-muted-foreground">Manage eyeglass production and prepare orders for delivery</p>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">
+            {view === 'account' ? 'Account Settings' : 'Manufacturer Dashboard'}
+          </h1>
+          <p className="text-muted-foreground">
+            {view === 'account' 
+              ? 'Manage your account settings' 
+              : 'Manage eyeglass production and prepare orders for delivery'}
+          </p>
+        </div>
+        
+        {view === 'dashboard' && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                <User className="h-5 w-5" /> 
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuItem onClick={() => setView('account')}>
+                Account Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
-      {/* Order Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">In Production</p>
-                <p className="text-2xl font-bold">{orders.filter(o => o.status === 'processing').length}</p>
-              </div>
-              <Clock className="h-8 w-8 text-yellow-600" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Ready to Deliver</p>
-                <p className="text-2xl font-bold">{orders.filter(o => o.status === 'ready_to_deliver').length}</p>
-              </div>
-              <Package className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Active Orders</p>
-                <p className="text-2xl font-bold">{activeOrders.length}</p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {view === 'dashboard' ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">In Production</p>
+                    <p className="text-2xl font-bold">{orders.filter(o => o.status === 'processing').length}</p>
+                  </div>
+                  <Clock className="h-8 w-8 text-yellow-600" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Ready to Deliver</p>
+                    <p className="text-2xl font-bold">{orders.filter(o => o.status === 'ready_to_deliver').length}</p>
+                  </div>
+                  <Package className="h-8 w-8 text-blue-600" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Total Active Orders</p>
+                    <p className="text-2xl font-bold">{activeOrders.length}</p>
+                  </div>
+                  <CheckCircle className="h-8 w-8 text-primary" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-      {/* Orders Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Production Queue</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Frame Details</TableHead>
-                <TableHead>Lens Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {activeOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.id}</TableCell>
-                  <TableCell>
+          <Card>
+            <CardHeader>
+              <CardTitle>Production Queue</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order ID</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Frame Details</TableHead>
+                    <TableHead>Lens Type</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {activeOrders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">{order.id}</TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{order.customerName}</p>
+                          <p className="text-sm text-muted-foreground">{order.customerEmail}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{order.frameDetails.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {order.frameDetails.color} {order.frameDetails.material}
+                          </p>
+                          {order.frameDetails.size && (
+                            <p className="text-sm text-muted-foreground">Size: {order.frameDetails.size}</p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <Badge variant="outline">{order.lensDetails.type}</Badge>
+                          {order.lensDetails.option && (
+                            <p className="text-sm text-muted-foreground mt-1">{order.lensDetails.option}</p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(order.status)}>
+                          {getStatusIcon(order.status)}
+                          <span className="ml-1">{order.status.replace('_', ' ')}</span>
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setSelectedOrder(order)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                          {order.status === 'processing' && (
+                            <Button 
+                              size="sm"
+                              onClick={() => updateOrderStatus(order.id, 'ready_to_deliver')}
+                            >
+                              Mark Ready
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {selectedOrder && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <Card className="w-full max-w-4xl bg-white max-h-[90vh] overflow-y-auto">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Manufacturing Details - {selectedOrder.id}</CardTitle>
+                  <Button variant="ghost" onClick={() => setSelectedOrder(null)}>
+                    <X className="h-5 w-5" />
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <p className="font-medium">{order.customerName}</p>
-                      <p className="text-sm text-muted-foreground">{order.customerEmail}</p>
+                      <h4 className="font-semibold mb-2">Customer Information</h4>
+                      <p><strong>Name:</strong> {selectedOrder.customerName}</p>
+                      <p><strong>Email:</strong> {selectedOrder.customerEmail}</p>
+                      <p><strong>Order Date:</strong> {selectedOrder.orderDate}</p>
+                      <p><strong>Total:</strong> ${selectedOrder.totalAmount}</p>
                     </div>
-                  </TableCell>
-                  <TableCell>
                     <div>
-                      <p className="font-medium">{order.frameDetails.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {order.frameDetails.color} {order.frameDetails.material}
-                      </p>
-                      {order.frameDetails.size && (
-                        <p className="text-sm text-muted-foreground">Size: {order.frameDetails.size}</p>
+                      <h4 className="font-semibold mb-2">Production Status</h4>
+                      <Badge className={getStatusColor(selectedOrder.status)}>
+                        {getStatusIcon(selectedOrder.status)}
+                        <span className="ml-1">{selectedOrder.status.replace('_', ' ')}</span>
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-2">Frame Specifications</h4>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <p><strong>Model:</strong> {selectedOrder.frameDetails.name}</p>
+                      <p><strong>Color:</strong> {selectedOrder.frameDetails.color}</p>
+                      <p><strong>Material:</strong> {selectedOrder.frameDetails.material}</p>
+                      {selectedOrder.frameDetails.size && (
+                        <p><strong>Size:</strong> {selectedOrder.frameDetails.size}</p>
                       )}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <Badge variant="outline">{order.lensDetails.type}</Badge>
-                      {order.lensDetails.option && (
-                        <p className="text-sm text-muted-foreground mt-1">{order.lensDetails.option}</p>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-2">Lens Specifications</h4>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <p><strong>Type:</strong> {selectedOrder.lensDetails.type}</p>
+                      {selectedOrder.lensDetails.option && (
+                        <p><strong>Option:</strong> {selectedOrder.lensDetails.option}</p>
+                      )}
+                      {selectedOrder.lensDetails.prescription && (
+                        <div className="mt-2">
+                          <p><strong>Prescription Details:</strong></p>
+                          <div className="ml-4 mt-1 space-y-1">
+                            <p><strong>Right Eye:</strong> SPH {selectedOrder.lensDetails.prescription.rightEye.sphere}, CYL {selectedOrder.lensDetails.prescription.rightEye.cylinder}, AXIS {selectedOrder.lensDetails.prescription.rightEye.axis}</p>
+                            <p><strong>Left Eye:</strong> SPH {selectedOrder.lensDetails.prescription.leftEye.sphere}, CYL {selectedOrder.lensDetails.prescription.leftEye.cylinder}, AXIS {selectedOrder.lensDetails.prescription.leftEye.axis}</p>
+                          </div>
+                        </div>
                       )}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(order.status)}>
-                      {getStatusIcon(order.status)}
-                      <span className="ml-1">{order.status.replace('_', ' ')}</span>
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-2">Manufacturing Notes</h4>
+                    <Textarea
+                      value={manufacturerNotes || selectedOrder.manufacturerNotes || ''}
+                      onChange={(e) => setManufacturerNotes(e.target.value)}
+                      placeholder="Add production notes, special instructions, or quality checks..."
+                      rows={4}
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        onClick={() => {
+                          updateOrderStatus(selectedOrder.id, selectedOrder.status, manufacturerNotes);
+                          setManufacturerNotes('');
+                        }}
                         size="sm"
-                        onClick={() => setSelectedOrder(order)}
                       >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
+                        Save Notes
                       </Button>
-                      {order.status === 'processing' && (
-                        <Button 
-                          size="sm"
-                          onClick={() => updateOrderStatus(order.id, 'ready_to_deliver')}
+                      {selectedOrder.status === 'processing' && (
+                        <Button
+                          onClick={() => {
+                            updateOrderStatus(selectedOrder.id, 'ready_to_deliver', manufacturerNotes);
+                            setManufacturerNotes('');
+                            setSelectedOrder(null);
+                          }}
                         >
-                          Mark Ready
+                          Mark as Ready to Deliver
                         </Button>
                       )}
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Order Details Modal */}
-      {selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-4xl bg-white max-h-[90vh] overflow-y-auto">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Manufacturing Details - {selectedOrder.id}</CardTitle>
-              <Button variant="ghost" onClick={() => setSelectedOrder(null)}>
-                <X className="h-5 w-5" />
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-semibold mb-2">Customer Information</h4>
-                  <p><strong>Name:</strong> {selectedOrder.customerName}</p>
-                  <p><strong>Email:</strong> {selectedOrder.customerEmail}</p>
-                  <p><strong>Order Date:</strong> {selectedOrder.orderDate}</p>
-                  <p><strong>Total:</strong> ${selectedOrder.totalAmount}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Production Status</h4>
-                  <Badge className={getStatusColor(selectedOrder.status)}>
-                    {getStatusIcon(selectedOrder.status)}
-                    <span className="ml-1">{selectedOrder.status.replace('_', ' ')}</span>
-                  </Badge>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold mb-2">Frame Specifications</h4>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p><strong>Model:</strong> {selectedOrder.frameDetails.name}</p>
-                  <p><strong>Color:</strong> {selectedOrder.frameDetails.color}</p>
-                  <p><strong>Material:</strong> {selectedOrder.frameDetails.material}</p>
-                  {selectedOrder.frameDetails.size && (
-                    <p><strong>Size:</strong> {selectedOrder.frameDetails.size}</p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold mb-2">Lens Specifications</h4>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p><strong>Type:</strong> {selectedOrder.lensDetails.type}</p>
-                  {selectedOrder.lensDetails.option && (
-                    <p><strong>Option:</strong> {selectedOrder.lensDetails.option}</p>
-                  )}
-                  {selectedOrder.lensDetails.prescription && (
-                    <div className="mt-2">
-                      <p><strong>Prescription Details:</strong></p>
-                      <div className="ml-4 mt-1 space-y-1">
-                        <p><strong>Right Eye:</strong> SPH {selectedOrder.lensDetails.prescription.rightEye.sphere}, CYL {selectedOrder.lensDetails.prescription.rightEye.cylinder}, AXIS {selectedOrder.lensDetails.prescription.rightEye.axis}</p>
-                        <p><strong>Left Eye:</strong> SPH {selectedOrder.lensDetails.prescription.leftEye.sphere}, CYL {selectedOrder.lensDetails.prescription.leftEye.cylinder}, AXIS {selectedOrder.lensDetails.prescription.leftEye.axis}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold mb-2">Manufacturing Notes</h4>
-                <Textarea
-                  value={manufacturerNotes || selectedOrder.manufacturerNotes || ''}
-                  onChange={(e) => setManufacturerNotes(e.target.value)}
-                  placeholder="Add production notes, special instructions, or quality checks..."
-                  rows={4}
-                />
-                <div className="flex gap-2 mt-2">
-                  <Button
-                    onClick={() => {
-                      updateOrderStatus(selectedOrder.id, selectedOrder.status, manufacturerNotes);
-                      setManufacturerNotes('');
-                    }}
-                    size="sm"
-                  >
-                    Save Notes
-                  </Button>
-                  {selectedOrder.status === 'processing' && (
-                    <Button
-                      onClick={() => {
-                        updateOrderStatus(selectedOrder.id, 'ready_to_deliver', manufacturerNotes);
-                        setManufacturerNotes('');
-                        setSelectedOrder(null);
-                      }}
-                    >
-                      Mark as Ready to Deliver
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </>
+      ) : (
+        <div>
+          <Button 
+            variant="ghost" 
+            onClick={() => setView('dashboard')}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Dashboard
+          </Button>
+          <ManufacturerAccountSettings />
         </div>
       )}
     </div>

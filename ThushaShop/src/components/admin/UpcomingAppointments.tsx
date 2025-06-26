@@ -7,12 +7,12 @@ import { useUser } from "@/context/UserContext";
 import { AlertCircle } from "lucide-react";
 
 interface Appointment {
-  id: string;
-  customer: string;
+  id: number;
+  patient_name: string;
   date: string;
   time: string;
   status: string;
-  doctor: string;
+  doctor_name: string;
 }
 
 interface UpcomingAppointmentsProps {
@@ -38,11 +38,11 @@ const UpcomingAppointments: React.FC<UpcomingAppointmentsProps> = ({
           {appointments.filter(apt => apt.status === 'scheduled').slice(0, 3).map((apt) => (
             <div key={apt.id} className="flex items-center justify-between border-b pb-2">
               <div>
-                <p className="font-medium">{apt.customer}</p>
+                <p className="font-medium">{apt.patient_name}</p>
                 <p className="text-sm text-muted-foreground">{apt.date} at {apt.time}</p>
               </div>
               <div className="text-right">
-                <p className="font-medium">{apt.doctor}</p>
+                <p className="font-medium">{apt.doctor_name}</p>
                 <Badge variant="outline">{apt.status}</Badge>
               </div>
             </div>

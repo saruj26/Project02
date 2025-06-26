@@ -9,7 +9,7 @@ interface StaffAccountManagerProps {
 
 // Define a type for components that can accept the onCreateStaffAccount prop
 export interface StaffAccountReceiverProps {
-  onCreateStaffAccount?: (name: string, email: string, password: string, role: "doctor" | "delivery") => Promise<void>;
+  onCreateStaffAccount?: (name: string, email: string, password: string, role: "doctor" | "delivery" | "manufacturer") => Promise<void>;
 }
 
 const StaffAccountManager: React.FC<StaffAccountManagerProps> = ({ children }) => {
@@ -17,7 +17,7 @@ const StaffAccountManager: React.FC<StaffAccountManagerProps> = ({ children }) =
   const { toast } = useToast();
 
   // Function to create a doctor or delivery staff account
-  const handleCreateStaffAccount = async (name: string, email: string, password: string, role: "doctor" | "delivery") => {
+  const handleCreateStaffAccount = async (name: string, email: string, password: string, role: "doctor" | "delivery" | "manufacturer") => {
     try {
       await register(name, email, password, role);
       toast({
