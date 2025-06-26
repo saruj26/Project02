@@ -10,7 +10,9 @@ export const fetchProducts = async (): Promise<Product[]> => {
 
 export const addProduct = async (productData: FormData): Promise<Product> => {
   const res = await apiClient.post(endpoint, productData, {
-    headers: { "Content-Type": "multipart/form-data" }
+     headers: { "Content-Type": "multipart/form-data" ,
+     }
+     
   });
   return res.data;
 };
@@ -31,4 +33,12 @@ export const updateStock = async (id: number, newStock: number): Promise<void> =
   await apiClient.patch(`/api/products/products/${id}/update-stock/`, {
     stock: newStock,
   });
+};
+
+export const deleteProductImage = async (productId: number, imageId: number): Promise<void> => {
+  await apiClient.delete(`${endpoint}${productId}/images/${imageId}/`);
+};
+
+export const setPrimaryImage = async (productId: number, imageId: number): Promise<void> => {
+  await apiClient.patch(`${endpoint}${productId}/images/${imageId}/set-primary/`);
 };
