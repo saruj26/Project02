@@ -22,6 +22,7 @@ export interface ApiProduct {
   vision_problems: string[];
   sold:number;
   images: string[];
+  frame_material?: string;
 
 }
 
@@ -49,7 +50,7 @@ export interface Product {
   frame_type: FrameType;
   images: string[];
 
-  frameMaterial?: string;
+  frame_material?: string;
   colors?: string;
   features?: string[];
   face_shapes?: string[];

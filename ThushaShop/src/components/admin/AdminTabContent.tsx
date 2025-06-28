@@ -93,6 +93,7 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
           onDeleteProduct={deleteProduct}
           onAddProduct={addProduct}
           onUpdateProduct={updateProduct}
+          
           accessories={accessories}
           onUpdateAccessoryStock={updateAccessoryStock}
           onDeleteAccessory={deleteAccessory}
