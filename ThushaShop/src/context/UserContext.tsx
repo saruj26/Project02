@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import axios from 'axios';
+import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
 
 // Types
@@ -13,48 +13,45 @@ import {
 } from "@/types/user";
 
 // Validation
-import {
-  validateForm,
-  loginSchema,
-  registerSchema,
-} from "@/utils/validation";
+import { validateForm, loginSchema, registerSchema } from "@/utils/validation";
 import { defaultUser } from "@/services/authService";
-import { authClient, apiClient } from '@/lib/api-clients';
-
+import { authClient, apiClient } from "@/lib/api-clients";
 
 // Add to apiClient interceptors
 // In your api-clients.ts
 apiClient.interceptors.response.use(
-  response => response,
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       try {
-        const refreshToken = localStorage.getItem('refresh_token');
-        if (!refreshToken) throw new Error('No refresh token');
-        
-        const response = await authClient.post('/api/core/token/refresh/', {
-          refresh: refreshToken
+        const refreshToken = localStorage.getItem("refresh_token");
+        if (!refreshToken) throw new Error("No refresh token");
+
+        const response = await authClient.post("/api/core/token/refresh/", {
+          refresh: refreshToken,
         });
-        
+
         const newAccessToken = response.data.access;
-        localStorage.setItem('access_token', newAccessToken);
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
-        
+        localStorage.setItem("access_token", newAccessToken);
+        apiClient.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${newAccessToken}`;
+
         return apiClient(originalRequest);
       } catch (refreshError) {
         console.error("Refresh token failed:", refreshError);
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        window.location.href = '/account?login=true';
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user");
+        window.location.href = "/account?login=true";
         return Promise.reject(refreshError);
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -66,42 +63,44 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   // Load user from localStorage on mount
- useEffect(() => {
-  const initializeAuth = async () => {
-    const accessToken = localStorage.getItem('access_token');
-    const savedUser = localStorage.getItem('user');
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const accessToken = localStorage.getItem("access_token");
+      const savedUser = localStorage.getItem("user");
 
-    if (accessToken && savedUser) {
-      try {
-        // Verify token is still valid by making a lightweight API call
-        await authClient.get('/api/core/verify-token/');
-        
-        // Set axios default headers
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-        
-        // Parse and set user data
-        const parsedUser = JSON.parse(savedUser);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
-        
-        // Refresh user data in background
-        fetchProfile().catch(() => {
-          console.warn("Background profile refresh failed");
-        });
-      } catch (error) {
-        // Token verification failed - clear invalid auth data
-        console.error("Token verification failed:", error);
-        performCleanup(false); // silent cleanup
+      if (accessToken && savedUser) {
+        try {
+          // Verify token is still valid by making a lightweight API call
+          await authClient.get("/api/core/verify-token/");
+
+          // Set axios default headers
+          apiClient.defaults.headers.common[
+            "Authorization"
+          ] = `Bearer ${accessToken}`;
+
+          // Parse and set user data
+          const parsedUser = JSON.parse(savedUser);
+          setUser(parsedUser);
+          setIsAuthenticated(true);
+
+          // Refresh user data in background
+          fetchProfile().catch(() => {
+            console.warn("Background profile refresh failed");
+          });
+        } catch (error) {
+          // Token verification failed - clear invalid auth data
+          console.error("Token verification failed:", error);
+          performCleanup(false); // silent cleanup
+        }
+      } else {
+        // No valid auth data found
+        setUser(defaultUser);
+        setIsAuthenticated(false);
       }
-    } else {
-      // No valid auth data found
-      setUser(defaultUser);
-      setIsAuthenticated(false);
-    }
-  };
+    };
 
-  initializeAuth();
-}, []);
+    initializeAuth();
+  }, []);
 
   // Save user to localStorage when it changes
   useEffect(() => {
@@ -133,32 +132,35 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   // Login function
 
-const login = async (email: string, password: string): Promise<User> => {
-  try {
-    const response = await authClient.post("/api/core/login/", { email, password });
-    const { access, refresh, user } = response.data;
-
-    // (Optional) Use httpOnly cookies instead of localStorage
-    localStorage.setItem('access_token', access);
-    localStorage.setItem('refresh_token', refresh);
-    localStorage.setItem('user', JSON.stringify(user));
-    // Set default auth header for future requests
-    authClient.defaults.headers.common['Authorization'] = `Bearer ${access}`;
-
-    setUser(user);
-    setIsAuthenticated(true);
-
-    // Handle fetchProfile errors
+  const login = async (email: string, password: string): Promise<User> => {
     try {
-      await fetchProfile();
-    } catch (error) {
-      console.error("Failed to fetch profile:", error);
-      toast({
-        title: "Profile Load Failed",
-        description: "User data may be incomplete.",
-        variant: "destructive",
+      const response = await authClient.post("/api/core/login/", {
+        email,
+        password,
       });
-    }
+      const { access, refresh, user } = response.data;
+
+      // (Optional) Use httpOnly cookies instead of localStorage
+      localStorage.setItem("access_token", access);
+      localStorage.setItem("refresh_token", refresh);
+      localStorage.setItem("user", JSON.stringify(user));
+      // Set default auth header for future requests
+      authClient.defaults.headers.common["Authorization"] = `Bearer ${access}`;
+
+      setUser(user);
+      setIsAuthenticated(true);
+
+      // Handle fetchProfile errors
+      try {
+        await fetchProfile();
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+        toast({
+          title: "Profile Load Failed",
+          description: "User data may be incomplete.",
+          variant: "destructive",
+        });
+      }
 
       toast({
         title: "Login Successful",
@@ -167,9 +169,8 @@ const login = async (email: string, password: string): Promise<User> => {
 
       return user;
     } catch (error: any) {
-      const message = error.response?.data?.message ||
-                      error.message ||
-                      "Login failed";
+      const message =
+        error.response?.data?.message || error.message || "Login failed";
 
       toast({
         title: "Login Failed",
@@ -182,67 +183,74 @@ const login = async (email: string, password: string): Promise<User> => {
   };
 
   // Logout function
-const logout = async (showToast = true) => {
-  const refreshToken = localStorage.getItem('refresh_token');
-  
-  try {
-    // Only attempt API logout if we have a refresh token
-    if (refreshToken) {
-      await authClient.post("/api/core/logout/", { 
-        refresh: refreshToken 
-      }, {
-        timeout: 5000 // Add timeout to prevent hanging
-      });
-    }
+  const logout = async (showToast = true) => {
+    const refreshToken = localStorage.getItem("refresh_token");
 
+    try {
+      // Only attempt API logout if we have a refresh token
+      if (refreshToken) {
+        await authClient.post(
+          "/api/core/logout/",
+          {
+            refresh: refreshToken,
+          },
+          {
+            timeout: 5000, // Add timeout to prevent hanging
+          }
+        );
+      }
+
+      if (showToast) {
+        toast({
+          title: "Logged Out",
+          description: "You have been successfully signed out",
+        });
+      }
+    } catch (error: any) {
+      console.error("Logout API error:", error);
+
+      if (showToast) {
+        toast({
+          title: "Session Ended",
+          description: "Your session has been cleared",
+          variant: "default",
+        });
+      }
+    } finally {
+      await performCleanup();
+    }
+  };
+
+  const performCleanup = async (showToast = true) => {
+    // Clear all authentication data
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user");
+    // Clear any application-specific storage
+    sessionStorage.clear();
+
+    // Reset React state
+    setUser(null);
+    setIsAuthenticated(false);
+
+    // Clear axios cache if needed
+    apiClient.interceptors.request.clear();
     if (showToast) {
       toast({
         title: "Logged Out",
         description: "You have been successfully signed out",
       });
     }
-
-  } catch (error: any) {
-    console.error("Logout API error:", error);
-    
-    if (showToast) {
-      toast({
-        title: "Session Ended",
-        description: "Your session has been cleared",
-        variant: "default",
-      });
-    }
-    
-  } finally {
-    await performCleanup();
-  }
-};
-
-const performCleanup = async (showToast = true) => {
-  // Clear all authentication data
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('refresh_token');
-  localStorage.removeItem('user');
-  // Clear any application-specific storage
-  sessionStorage.clear();
-  
-  // Reset React state
-  setUser(null);
-  setIsAuthenticated(false);
-  
-  // Clear axios cache if needed
-  apiClient.interceptors.request.clear();
-  if (showToast) {
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully signed out",
-    });
-  }
-  // Redirect with full page reload to ensure complete cleanup
-  window.location.assign('/account?login=true'); // Use assign() instead of href
-};
+    // Redirect with full page reload to ensure complete cleanup
+    window.location.assign("/account?login=true"); // Use assign() instead of href
+  };
   // Register function
-  const register = async (name: string, email: string, password: string, role: UserRole): Promise<void> => {
+  const register = async (
+    name: string,
+    email: string,
+    password: string,
+    role: UserRole
+  ): Promise<void> => {
     const validation = validateForm(registerSchema, {
       name,
       email,
@@ -252,7 +260,8 @@ const performCleanup = async (showToast = true) => {
     });
 
     if (!validation.success) {
-      const errorMessage = validation.errors?.errors[0]?.message || "Invalid registration data";
+      const errorMessage =
+        validation.errors?.errors[0]?.message || "Invalid registration data";
       toast({
         title: "Registration Error",
         description: errorMessage,
@@ -276,11 +285,9 @@ const performCleanup = async (showToast = true) => {
         title: "Verification Code Sent",
         description: `We've sent a 6-digit code to ${email}`,
       });
-
     } catch (error: any) {
-      const message = error.response?.data?.message ||
-                      error.message ||
-                      "Registration failed";
+      const message =
+        error.response?.data?.message || error.message || "Registration failed";
 
       toast({
         title: "Registration Failed",
@@ -294,42 +301,48 @@ const performCleanup = async (showToast = true) => {
 
   // OTP Verification
   const verifyOTP = async (email: string, otp: string): Promise<boolean> => {
-  try {
-    const response = await authClient.post("/api/core/verify-otp/", { email, otp });
-    const { access, refresh, user } = response.data; // Ensure backend returns tokens
+    try {
+      const response = await authClient.post("/api/core/verify-otp/", {
+        email,
+        otp,
+      });
+      const { access, refresh, user } = response.data; // Ensure backend returns tokens
 
-    // Store tokens and update state
-    localStorage.setItem('access_token', access);
-    localStorage.setItem('refresh_token', refresh);
-    setUser(user);
-    setIsAuthenticated(true);
+      // Store tokens and update state
+      localStorage.setItem("access_token", access);
+      localStorage.setItem("refresh_token", refresh);
+      setUser(user);
+      setIsAuthenticated(true);
 
-    // Create profile if doesn't exist
-    await createInitialProfile();
+      // Create profile if doesn't exist
+      await createInitialProfile();
 
-    toast({ title: "Email Verified!", description: "Account created successfully." });
-    return true;
-  } catch (error) {
-    // Error handling
-    return false;
-  }
-};
+      toast({
+        title: "Email Verified!",
+        description: "Account created successfully.",
+      });
+      return true;
+    } catch (error) {
+      // Error handling
+      return false;
+    }
+  };
 
-const createInitialProfile = async () => {
-  try {
-    await apiClient.post("/api/core/profile/", {
-      phone_number: "",
-      address_line1: "",
-      address_line2: '',
-      city: '',
-      state: '',
-      zip_code: '',
-      country: ''
-    });
-  } catch (error) {
-    console.error("Profile creation failed:", error);
-  }
-};
+  const createInitialProfile = async () => {
+    try {
+      await apiClient.post("/api/core/profile/", {
+        phone_number: "",
+        address_line1: "",
+        address_line2: "",
+        city: "",
+        state: "",
+        zip_code: "",
+        country: "",
+      });
+    } catch (error) {
+      console.error("Profile creation failed:", error);
+    }
+  };
   // Resend OTP
   const resendOTP = async (email: string): Promise<void> => {
     try {
@@ -340,9 +353,10 @@ const createInitialProfile = async () => {
         description: `A new verification code has been sent to ${email}`,
       });
     } catch (error: any) {
-      const message = error.response?.data?.message ||
-                      error.message ||
-                      "Could not resend OTP.";
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Could not resend OTP.";
 
       toast({
         title: "Error",
@@ -354,13 +368,13 @@ const createInitialProfile = async () => {
     }
   };
 
-   // Fetch Profile Data
+  // Fetch Profile Data
   const fetchProfile = async () => {
     try {
       const response = await apiClient.get("/api/core/profile/");
       const profileData = response.data;
 
-      setUser(prev => ({
+      setUser((prev) => ({
         ...prev,
         name: profileData.name || prev?.name,
         profile: {
@@ -371,8 +385,8 @@ const createInitialProfile = async () => {
           city: profileData.city,
           state: profileData.state,
           zip_code: profileData.zip_code,
-          country: profileData.country
-        }
+          country: profileData.country,
+        },
       }));
     } catch (error) {
       console.error("Failed to fetch profile:", error);
@@ -400,14 +414,14 @@ const createInitialProfile = async () => {
       // Flatten nested data
       const payload = {
         name: profileData.name,
-        ...(profileData.profile || {})
+        ...(profileData.profile || {}),
       };
 
       const response = await apiClient.patch("/api/core/profile/", payload);
 
       const updatedUser = response.data;
 
-      setUser(prev => {
+      setUser((prev) => {
         if (!prev) return null;
         return {
           ...prev,
@@ -420,8 +434,8 @@ const createInitialProfile = async () => {
             city: updatedUser.city,
             state: updatedUser.state,
             zip_code: updatedUser.zip_code,
-            country: updatedUser.country
-          }
+            country: updatedUser.country,
+          },
         };
       });
 
@@ -429,11 +443,11 @@ const createInitialProfile = async () => {
         title: "Profile Updated",
         description: "Your profile has been updated successfully.",
       });
-
     } catch (error: any) {
-      const message = error.response?.data?.message ||
-                      error.message ||
-                      "Failed to update profile.";
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to update profile.";
 
       toast({
         title: "Update Failed",
@@ -446,7 +460,10 @@ const createInitialProfile = async () => {
   };
 
   // Change Password
-  const updatePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+  const updatePassword = async (
+    currentPassword: string,
+    newPassword: string
+  ): Promise<void> => {
     try {
       await apiClient.post("/api/core/change-password/", {
         currentPassword,
@@ -458,9 +475,10 @@ const createInitialProfile = async () => {
         description: "Your password has been successfully changed.",
       });
     } catch (error: any) {
-      const message = error.response?.data?.message ||
-                      error.message ||
-                      "Password change failed.";
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Password change failed.";
 
       toast({
         title: "Change Failed",
@@ -479,6 +497,78 @@ const createInitialProfile = async () => {
       return requiredRoles.includes(user.role);
     }
     return user.role === requiredRoles;
+  };
+
+  // Add these methods to your UserProvider component (before the return statement)
+  const sendPasswordResetOtp = async (email: string): Promise<void> => {
+    try {
+      await authClient.post("/api/core/forgot-password/send-otp/", { email });
+      toast({
+        title: "OTP Sent",
+        description: `A 6-digit code has been sent to ${email}`,
+      });
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message || error.message || "Failed to send OTP";
+      toast({
+        title: "Enter the correct Email",
+        description: message,
+        variant: "destructive",
+      });
+      throw new Error(message);
+    }
+  };
+
+  const verifyPasswordResetOtp = async (
+    email: string,
+    otp: string
+  ): Promise<boolean> => {
+    try {
+      const response = await authClient.post(
+        "/api/core/forgot-password/verify-otp/",
+        {
+          email,
+          otp,
+        }
+      );
+      return response.data.verified;
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message || error.message || "Invalid OTP";
+      toast({
+        title: "Enter Correct OTP",
+        description: message,
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  const resetPassword = async (
+    email: string,
+    newPassword: string
+  ): Promise<void> => {
+    try {
+      await authClient.post("/api/core/forgot-password/reset/", {
+        email,
+        new_password: newPassword,
+      });
+      toast({
+        title: "Password Reset",
+        description: "Your password has been updated successfully",
+      });
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Password reset failed";
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
+      throw new Error(message);
+    }
   };
 
   return (
@@ -500,6 +590,9 @@ const createInitialProfile = async () => {
         hasRole,
         verifyOTP,
         resendOTP,
+        sendPasswordResetOtp,
+        verifyPasswordResetOtp,
+        resetPassword,
       }}
     >
       {children}
