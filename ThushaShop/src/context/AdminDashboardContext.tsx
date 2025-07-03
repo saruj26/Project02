@@ -52,6 +52,7 @@ import {
   deactivateCustomer,
   activateCustomer,
   Customer,
+  fetchCustomerCount
 } from "@/api/customers";
 import { useToast } from "@/hooks/use-toast";
 import { Product } from "@/types/product";
@@ -155,7 +156,7 @@ export const AdminDashboardProvider: React.FC<AdminDashboardProviderProps> = ({
   const [stats, setStats] = useState({
     totalSales: 25890.75,
     monthlyRevenue: 4560.25,
-    totalCustomers: 235,
+    totalCustomers:0,
     totalOrders: 412,
     pendingOrders: 23,
     conversion: 3.2,
@@ -177,6 +178,7 @@ export const AdminDashboardProvider: React.FC<AdminDashboardProviderProps> = ({
           accessoriesData,
           appointmentData,
           customersData,
+          customerCount,
         ] = await Promise.all([
           getFrameTypes(),
           getCategories(),
@@ -184,6 +186,7 @@ export const AdminDashboardProvider: React.FC<AdminDashboardProviderProps> = ({
           fetchAccessories(),
           fetchAppointments(),
           fetchActiveCustomers(),
+          fetchCustomerCount(), 
         ]);
         setFrameTypes(frameTypesData);
         setCategories(categoriesData);
@@ -191,6 +194,10 @@ export const AdminDashboardProvider: React.FC<AdminDashboardProviderProps> = ({
         setAccessories(accessoriesData);
         setAppointments(appointmentData);
         setCustomers(customersData);
+        setStats((prev) => ({
+        ...prev,
+        totalCustomers: customerCount, // ✅ Set correct count
+        }));
         console.log("✅ Customers fetch response va:", customersData); // ✅ step 2
       } catch (error) {
         console.error("Failed to load initial data:", error);
