@@ -1,9 +1,18 @@
-
-import React, { createContext, useContext, useState, useReducer, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useReducer,
+  useEffect,
+} from "react";
 import { useToast } from "../hooks/use-toast";
 import { Product } from "../types";
 import { CartItem } from "../types/cart";
-import { calculateCartTotal, calculateLensTotal, calculateItemCount } from "../utils/cartUtils";
+import {
+  calculateCartTotal,
+  calculateLensTotal,
+  calculateItemCount,
+} from "../utils/cartUtils";
 import { cartReducer, CartState } from "./cartReducer";
 
 type CartContextType = {
@@ -11,7 +20,14 @@ type CartContextType = {
   addToCart: (product: Product, quantity?: number) => void;
   removeFromCart: (productId: number) => void;
   updateQuantity: (productId: number, quantity: number) => void;
-  updateLensOption: (productId: number, lensOption: { type: "standard" | "prescription"; option: string; price: number; }) => void;
+  updateLensOption: (
+    productId: number,
+    lensOption: {
+      type: "standard" | "prescription";
+      option: string;
+      price: number;
+    }
+  ) => void;
   clearCart: () => void;
   getCartTotal: () => number;
   getLensTotal: () => number;
@@ -24,28 +40,32 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const initialState: CartState = {
     cartItems: [],
-    prescriptionVerified: false
+    prescriptionVerified: false,
   };
-  
+
   const [state, dispatch] = useReducer(cartReducer, initialState);
   const { toast } = useToast();
 
-  // Load cart from localStorage on initial load
+  // Load cart from sessionStorage on initial load
   useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
+    const savedCart = sessionStorage.getItem("cart");
     if (savedCart) {
       try {
         const parsedCart = JSON.parse(savedCart);
         // We need to set each item individually through the reducer
         parsedCart.forEach((item: CartItem) => {
-          dispatch({ type: 'ADD_ITEM', product: item.product, quantity: item.quantity });
-          
+          dispatch({
+            type: "ADD_ITEM",
+            product: item.product,
+            quantity: item.quantity,
+          });
+
           // If there's a lens option, update it
           if (item.lensOption) {
-            dispatch({ 
-              type: 'UPDATE_LENS_OPTION', 
-              productId: item.product.id, 
-              lensOption: item.lensOption 
+            dispatch({
+              type: "UPDATE_LENS_OPTION",
+              productId: item.product.id,
+              lensOption: item.lensOption,
             });
           }
         });
@@ -55,22 +75,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes
+  // Save cart to sessionStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(state.cartItems));
+    sessionStorage.setItem("cart", JSON.stringify(state.cartItems));
   }, [state.cartItems]);
 
   const addToCart = (product: Product, quantity = 1) => {
-    dispatch({ type: 'ADD_ITEM', product, quantity });
-    
+    dispatch({ type: "ADD_ITEM", product, quantity });
+
     const existingItem = state.cartItems.find(
       (item) => item.product.id === product.id
     );
-    
+
     if (existingItem) {
       toast({
         title: "Product updated in cart",
-        description: `${product.name} quantity updated to ${existingItem.quantity + quantity}`,
+        description: `${product.name} quantity updated to ${
+          existingItem.quantity + quantity
+        }`,
       });
     } else {
       toast({
@@ -84,15 +106,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const itemToRemove = state.cartItems.find(
       (item) => item.product.id === productId
     );
-    
+
     if (itemToRemove) {
       toast({
         title: "Product removed from cart",
         description: `${itemToRemove.product.name} removed from your cart`,
       });
     }
-    
-    dispatch({ type: 'REMOVE_ITEM', productId });
+
+    dispatch({ type: "REMOVE_ITEM", productId });
   };
 
   const updateQuantity = (productId: number, quantity: number) => {
@@ -101,11 +123,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    dispatch({ type: 'UPDATE_QUANTITY', productId, quantity });
+    dispatch({ type: "UPDATE_QUANTITY", productId, quantity });
   };
 
-  const updateLensOption = (productId: number, lensOption: { type: "standard" | "prescription"; option: string; price: number }) => {
-    dispatch({ type: 'UPDATE_LENS_OPTION', productId, lensOption });
+  const updateLensOption = (
+    productId: number,
+    lensOption: {
+      type: "standard" | "prescription";
+      option: string;
+      price: number;
+    }
+  ) => {
+    dispatch({ type: "UPDATE_LENS_OPTION", productId, lensOption });
 
     toast({
       title: "Lens option updated",
@@ -114,7 +143,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const clearCart = () => {
-    dispatch({ type: 'CLEAR_CART' });
+    dispatch({ type: "CLEAR_CART" });
     toast({
       title: "Cart cleared",
       description: "All items have been removed from your cart",
@@ -126,7 +155,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const getItemCount = () => calculateItemCount(state.cartItems);
 
   const setPrescriptionVerified = (verified: boolean) => {
-    dispatch({ type: 'SET_PRESCRIPTION_VERIFIED', verified });
+    dispatch({ type: "SET_PRESCRIPTION_VERIFIED", verified });
   };
 
   return (

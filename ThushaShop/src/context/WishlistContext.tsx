@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "../components/ui/use-toast";
 import { Product } from "../types";
@@ -18,9 +17,9 @@ const WishlistContext = createContext<WishlistContextType | undefined>(
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
 
-  // Load wishlist from localStorage on initial load
+  // Load wishlist from sessionStorage on initial load
   useEffect(() => {
-    const savedWishlist = localStorage.getItem("wishlist");
+    const savedWishlist = sessionStorage.getItem("wishlist");
     if (savedWishlist) {
       try {
         setWishlistItems(JSON.parse(savedWishlist));
@@ -30,9 +29,9 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Save wishlist to localStorage whenever it changes
+  // Save wishlist to sessionStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem("wishlist", JSON.stringify(wishlistItems));
+    sessionStorage.setItem("wishlist", JSON.stringify(wishlistItems));
   }, [wishlistItems]);
 
   const addToWishlist = (product: Product) => {
@@ -48,14 +47,14 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const removeFromWishlist = (productId: number) => {
     setWishlistItems((prevItems) => {
       const itemToRemove = prevItems.find((item) => item.id === productId);
-      
+
       if (itemToRemove) {
         toast({
           title: "Removed from wishlist",
           description: `${itemToRemove.name} has been removed from your wishlist`,
         });
       }
-      
+
       return prevItems.filter((item) => item.id !== productId);
     });
   };

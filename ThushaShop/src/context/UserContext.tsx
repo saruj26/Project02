@@ -28,7 +28,7 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem("refresh_token");
+        const refreshToken = sessionStorage.getItem("refresh_token");
         if (!refreshToken) throw new Error("No refresh token");
 
         const response = await authClient.post("/api/core/token/refresh/", {
@@ -36,7 +36,7 @@ apiClient.interceptors.response.use(
         });
 
         const newAccessToken = response.data.access;
-        localStorage.setItem("access_token", newAccessToken);
+        sessionStorage.setItem("access_token", newAccessToken);
         apiClient.defaults.headers.common[
           "Authorization"
         ] = `Bearer ${newAccessToken}`;
@@ -44,9 +44,9 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         console.error("Refresh token failed:", refreshError);
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        localStorage.removeItem("user");
+        sessionStorage.removeItem("access_token");
+        sessionStorage.removeItem("refresh_token");
+        sessionStorage.removeItem("user");
         window.location.href = "/account?login=true";
         return Promise.reject(refreshError);
       }
@@ -62,11 +62,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
 
-  // Load user from localStorage on mount
+  // Load user from sessionStorage on mount
   useEffect(() => {
     const initializeAuth = async () => {
-      const accessToken = localStorage.getItem("access_token");
-      const savedUser = localStorage.getItem("user");
+      const accessToken = sessionStorage.getItem("access_token");
+      const savedUser = sessionStorage.getItem("user");
 
       if (accessToken && savedUser) {
         try {
@@ -102,12 +102,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
   }, []);
 
-  // Save user to localStorage when it changes
+  // Save user to sessionStorage when it changes
   useEffect(() => {
     if (user && isAuthenticated) {
-      localStorage.setItem("user", JSON.stringify(user));
+      sessionStorage.setItem("user", JSON.stringify(user));
     } else {
-      localStorage.removeItem("user");
+      sessionStorage.removeItem("user");
     }
   }, [user, isAuthenticated]);
 
@@ -140,10 +140,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       });
       const { access, refresh, user } = response.data;
 
-      // (Optional) Use httpOnly cookies instead of localStorage
-      localStorage.setItem("access_token", access);
-      localStorage.setItem("refresh_token", refresh);
-      localStorage.setItem("user", JSON.stringify(user));
+      // (Optional) Use httpOnly cookies instead of sessionStorage
+      sessionStorage.setItem("access_token", access);
+      sessionStorage.setItem("refresh_token", refresh);
+      sessionStorage.setItem("user", JSON.stringify(user));
       // Set default auth header for future requests
       authClient.defaults.headers.common["Authorization"] = `Bearer ${access}`;
 
@@ -184,7 +184,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   // Logout function
   const logout = async (showToast = true) => {
-    const refreshToken = localStorage.getItem("refresh_token");
+    const refreshToken = sessionStorage.getItem("refresh_token");
 
     try {
       // Only attempt API logout if we have a refresh token
@@ -223,9 +223,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const performCleanup = async (showToast = true) => {
     // Clear all authentication data
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("access_token");
+    sessionStorage.removeItem("refresh_token");
+    sessionStorage.removeItem("user");
     // Clear any application-specific storage
     sessionStorage.clear();
 
@@ -309,8 +309,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const { access, refresh, user } = response.data; // Ensure backend returns tokens
 
       // Store tokens and update state
-      localStorage.setItem("access_token", access);
-      localStorage.setItem("refresh_token", refresh);
+      sessionStorage.setItem("access_token", access);
+      sessionStorage.setItem("refresh_token", refresh);
       setUser(user);
       setIsAuthenticated(true);
 
